@@ -1,6 +1,5 @@
 #GameStatusCounts
 {
-    float:right;
     color:blue;
 }
 #StatusArea
@@ -9,4 +8,8 @@
     margin: 0 auto;
     font-size:125%;
     float:center;
+}
+
+body {
+    display: table;
 }

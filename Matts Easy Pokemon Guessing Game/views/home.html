@@ -1,15 +1,40 @@
 </div>
-<div data-role="view"  data-layout="main" data-model="APP.models.home">    <div id="GameStatusCounts">
+<div data-role="view" data-layout="main" data-model="APP.models.home">
+    <div id="StatusArea" data-bind="text: StatusText"></div>
+    <br/>
+    <table align="center" >
+        <tr>
+            <td>
+                <img class="centeredImage" data-bind="attr: { src:  CurrentPokemonImage }" height="170" />
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <div style="text-align:center">
+<!--                 <select data-role="dropdownlist" 
+                        data-bind="source: PokemonChoices,value: PokemonSelected, visible: GameStarted" 
+                        style="margin:0 auto;display:block;" /> -->
+                    <button data-bind="click:listener,text:PokemonChoice1, visible: GameStarted" id="btn1"/>
+                    <button data-bind="click:listener,text:PokemonChoice2, visible: GameStarted" id="btn2"/>
+                    <button data-bind="click:listener,text:PokemonChoice3, visible: GameStarted" id="btn3"/>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <button data-bind="click: listener,text: buttonText, visible:GameNotStarted" style="margin:0 auto;display:block;" />
+            </td>
+        </tr>
+    </table>
+    <div data-bind="text: ResultStatusText" style="text-align:center"></div>
+    <div data-bind="visible: GameStarted" id="GameStatusCounts" style="text-align:center">
         <span>Correct:</span><span data-bind="text:CorrectCount"></span>/<span data-bind="text: TotalCount"></span>
     </div>
-    <div id="StatusArea" data-bind="text: StatusText"></div>
-
-    <div id="GameStatusCounts">
-        <select data-role="dropdownlist" data-bind="source: PokemonChoices,value: PokemonSelected, visible: GameStarted">            
-        </select>
+    <!--     
+     -->
+    <!--     
+        
     </div>
-    <button data-bind="click: listener">Start</button>
-    <img data-bind="attr: { src:  CurrentPokemonImage }" height="180" style="margin-left: auto; margin-right: auto" />
-    <h1 data-bind="text: ResultStatusText"></h1>
-</div>
+    
+    -->
 </div>

@@ -108,31 +108,42 @@
                 ResultStatusText: null,
                 CorrectCount:0,
                 IncorrectCount:0,
+                buttonText:"Start",
                 TotalCount:0,
+                PokemonChoice1: "",
+                PokemonChoice2: "",
+                PokemonChoice3: "",
                 GameStarted:false,
+                GameNotStarted:true,
                 onPokemonFound: function (e) {
                     if (e) {
 						if (!this.GameStarted)
                         {
-                        	window.APP.set("models.home.GameStarted", true);                            
+                        	window.APP.set("models.home.GameStarted", true); 
+                        	window.APP.set("models.home.GameNotStarted", false);        
+                            window.APP.set("models.home.buttonText", "Next");
 						}
                         window.APP.set("models.home.CurrentPokemonImage", GAMECONTROLLER.currentPokemonImageURL);
                         window.APP.set("models.home.StatusText", "Who is this pokemon?");
                         window.APP.set("models.home.PokemonChoices", GAMECONTROLLER.currentPokemonChoices);
+                        window.APP.set("models.home.PokemonChoice1", GAMECONTROLLER.currentPokemonChoices[0]);
+                        window.APP.set("models.home.PokemonChoice2", GAMECONTROLLER.currentPokemonChoices[1]);
+                        window.APP.set("models.home.PokemonChoice3", GAMECONTROLLER.currentPokemonChoices[2]);
                         window.APP.set("models.home.PokemonSelected", GAMECONTROLLER.currentPokemonChoices[0]);
                         console.log("PokemonSelected set to ", GAMECONTROLLER.currentPokemonChoices[0]);
                         //alert(JSON.stringify(GAMECONTROLLER.currentPokemonChoices));
                     };
                 },
                 listener: function (e) {
+                    var selectedPokemon = e.target.innerHTML;
+                    console.log("user clicked on: " + selectedPokemon);
                     //if game is ongoing, check if it's the correct answer.
                     if (GAMECONTROLLER.currentPokemon != null)
                     {	
                         
                         this.set("TotalCount", this.TotalCount+1);
                         this.set("CurrentPokemonImage", "images/loading.gif");
-                        console.log("user selected: " + this.PokemonSelected);
-                        var isCorrect = GAMECONTROLLER.CheckAnswer(this.PokemonSelected);
+                        var isCorrect = GAMECONTROLLER.CheckAnswer(selectedPokemon);
                         console.log("do they match?" + isCorrect);
                         if (isCorrect)
                         {
