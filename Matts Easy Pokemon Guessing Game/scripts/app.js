@@ -5,6 +5,24 @@
     var app;
     window.CACHECONTROLLER = kendo.observable({
         KnownPokemon: [],
+        GetImageFromCacheByURL:function(strURL)
+        {
+            alert("cached.");
+            //alert("hi");
+            var v = JSON.parse(localStorage.getItem("ImageData"));
+            console.log(v);
+            for (i = 0; i < v.length; i++)
+            {
+                //alert("Comparing: " + v[i].ImageURL + " to " + strURL);
+                if (v[i].ImageURL == strURL)
+                {
+                    //alert("WOOHOO");
+                    console.log("Using Local data for image!");
+                    return v[i].ImageData;
+                }
+            }
+            return strURL;
+        },
         GetFromCacheByID: function (e)
         {
             for (i = 0; i < this.KnownPokemon.length; i++) {
@@ -31,6 +49,47 @@
             }
             return null;
 
+        },
+        ImageData: new Array(),
+        AddImageToCache: function(strURL, strData)
+        {
+            if (this.ImageData.length == 0) {
+                console.log("no cache for ImageData, checking local storage");
+                
+                if (localStorage.getItem("ImageData") != null && localStorage.getItem("ImageData").length > 0) {
+                    CACHECONTROLLER.set("ImageData", JSON.parse(localStorage.getItem("ImageData")));
+                    console.log("CACHEIMAGE: Cache Refreshed from localStorage Items: " + this.ImageData.length);
+                }
+                //if (this.ImageData != null)
+                //{
+                //    this.ImageData = JSON.parse(localStorage.getItem("ImageData"));
+                //}
+                //if (objs != null && objs.length > 0) f
+                //{
+                //    //console.log("Cache contents: " + JSON.stringify(objs));
+                //    CACHECONTROLLER.set("ImageData", objs);
+                //    console.log("ImageData  updated.  contains: " + this.ImageData.length);
+                //}
+            }
+            else
+            {
+                console.log("CACHEIMAGE: ImageData exists, contains: " + this.ImageData.length);
+            }
+            
+            //alert("local contains " + local.length);
+            for (i = 0; i < this.ImageData.length; i++) {
+                //console.log("CACHEIMAGE: Local[i]" + this.ImageData[i]);
+                //console.log("CACHEIMAGE: Comparing " + this.ImageData[i].ImageURL + " to " + strURL);
+                if (this.ImageData[i].ImageURL == strURL) {
+                    console.log("CACHEIMAGE: Image was found in cache already.");
+                    return;
+                }
+            }
+            console.log("CACHEIMAGE: adding " + strURL + " to local");
+            var obj = { ImageURL: strURL, ImageData: strData };
+            this.ImageData.push(obj);
+            console.log('CACHEIMAGE: add successful.');
+            localStorage.setItem("ImageData", JSON.stringify(this.ImageData));
         },
         AddToCache: function (e) {
             //if initially entering, we may need to get from local storage first.
@@ -78,9 +137,8 @@
             {
                 GAMECONTROLLER.set("currentPokemon", cachedObject);
                 var v = GAMECONTROLLER.GeneratePickList();
-                //.log("FOUND IN CACHE : " + JSON.stringify(cachedObject));
                 GAMECONTROLLER.set("currentPokemonSprite", cachedObject.SPRITEINFO);
-                GAMECONTROLLER.set("currentPokemonImageURL", "http://pokeapi.co/" + cachedObject.SPRITEINFO.image);
+                GAMECONTROLLER.set("currentPokemonImageURL", CACHECONTROLLER.GetImageFromCacheByURL("http://pokeapi.co/" + cachedObject.SPRITEINFO.image));
                 callback(true);
             }
             //handler for pokemon return
@@ -109,6 +167,10 @@
             }
             request1.open("GET", this.pokeSearchURL + "pokemon/" + e, true);
             request1.send();
+        },
+        AddImageToCache: function(strURL, strData)
+        {
+            CACHECONTROLLER.AddImageToCache(strURL, strData);
         },
         GeneratePickList: function () {
             //alert("wtf");
@@ -172,6 +234,7 @@
         }
     });
 
+    
 
 
     window.APP = kendo.observable({
@@ -202,7 +265,28 @@
                         	window.APP.set("models.home.GameNotStarted", false);        
                             window.APP.set("models.home.buttonText", "Next");
 						}
-                        window.APP.set("models.home.CurrentPokemonImage", GAMECONTROLLER.currentPokemonImageURL);
+						window.APP.set("models.home.CurrentPokemonImage", GAMECONTROLLER.currentPokemonImageURL);
+						document.getElementById("currentImage").addEventListener('load', function () {
+
+						    var img = document.getElementById("currentImage");
+						    var src = img.src;
+						    //alert("Src = " + JSON.stringify(src));
+                            //if source is http, save locally.
+						    if (src.indexOf('http') >= 0) {
+						        var imgCanvas = document.createElement("canvas"),
+                                imgContext = imgCanvas.getContext("2d");
+						        // Make sure canvas is as big as the picture
+						        imgCanvas.width = img.width;
+						        imgCanvas.height = img.height;
+
+						        // Draw image into canvas element
+						        imgContext.drawImage(img, 0, 0, img.width, img.height);
+
+						        // Get canvas contents as a data URL
+						        var imgAsDataURL = imgCanvas.toDataURL("image/png");
+						        GAMECONTROLLER.AddImageToCache(img.src, imgAsDataURL);
+						    }
+						});
                         window.APP.set("models.home.StatusText", "Who is this pokemon?");
                         window.APP.set("models.home.PokemonChoices", GAMECONTROLLER.currentPokemonChoices);
                         window.APP.set("models.home.PokemonChoice1", GAMECONTROLLER.currentPokemonChoices[0]);
@@ -269,7 +353,7 @@
 
     // this function is called by Cordova when the application is loaded by the device
     document.addEventListener('deviceready', function () {
-
+       
         // hide the splash screen as soon as the app is ready. otherwise
         // Cordova will wait 5 very long seconds to do it for you.
         navigator.splashscreen.hide();
@@ -287,6 +371,9 @@
             initial: 'views/home.html'
         });
         //--enable to clear cache --        localStorage.setItem("KnownPokemon", null);
+
+        // --- enable to clear image cache --                localStorage.setItem("ImageData", []);
+        
         $(window).on("offline", function () {
             alert("offline");
         });
