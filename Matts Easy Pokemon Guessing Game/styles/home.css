@@ -1,0 +1,12 @@
+#GameStatusCounts
+{
+    float:right;
+    color:blue;
+}
+#StatusArea
+{
+    display: table;
+    margin: 0 auto;
+    font-size:125%;
+    float:center;
+}

@@ -1,9 +1,15 @@
 </div>
-<div data-role="view" data-title="Home" data-layout="main" data-model="APP.models.home">
-    <h1 data-bind="html: StatusText"></h1>
-    <div>
-        <button data-bind="click: listener">Start</button>
+<div data-role="view"  data-layout="main" data-model="APP.models.home">    <div id="GameStatusCounts">
+        <span>Correct:</span><span data-bind="text:CorrectCount"></span>/<span data-bind="text: TotalCount"></span>
     </div>
-    <img data-bind="attr: { src:  CurrentPokemonImage }" height="180" />
+    <div id="StatusArea" data-bind="text: StatusText"></div>
+
+    <div id="GameStatusCounts">
+        <select data-role="dropdownlist" data-bind="source: PokemonChoices,value: PokemonSelected, visible: GameStarted">            
+        </select>
+    </div>
+    <button data-bind="click: listener">Start</button>
+    <img data-bind="attr: { src:  CurrentPokemonImage }" height="180" style="margin-left: auto; margin-right: auto" />
+    <h1 data-bind="text: ResultStatusText"></h1>
 </div>
 </div>
