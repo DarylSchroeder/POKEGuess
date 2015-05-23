@@ -3,6 +3,66 @@
     // store a reference to the application object that will be created
     // later on so that we can use it if need be
     var app;
+    window.CACHECONTROLLER = kendo.observable({
+        KnownPokemon: [],
+        GetFromCacheByID: function (e)
+        {
+            for (i = 0; i < this.KnownPokemon.length; i++) {
+                if (this.KnownPokemon[i].national_id == e) {
+
+                    console.log("Pokemon found in CACHE : " + e.name);
+                    return this.KnownPokemon[i];
+                }
+
+            }
+
+        },
+        GetFromCache: function (e) {
+            //console.log("CACHE CONTENTS");
+            for (i = 0; i < this.KnownPokemon.length; i++) {
+                //console.log("[" + this.KnownPokemon[i].national_id + "]" + this.KnownPokemon[i].name);
+                if (e.national_id == this.KnownPokemon[i].national_id) {
+                    console.log("FOUND IN CACHE!");
+                    return {
+                        indexInKnownPokemon: i,
+                        PokemonData: this.KnownPokemon[i]
+                    }
+                }
+            }
+            return null;
+
+        },
+        AddToCache: function (e) {
+            //if initially entering, we may need to get from local storage first.
+            if (this.KnownPokemon.length == 0)
+            {
+                console.log("no cache, checking local storage");
+                var objs = JSON.parse(localStorage.getItem("KnownPokemon"));
+                if (objs != null && objs.length > 0)
+                {
+                    //console.log("Cache contents: " + JSON.stringify(objs));
+                    CACHECONTROLLER.set("KnownPokemon", objs);
+                    console.log("known pokemon updated.  contains: " + this.KnownPokemon.length);
+                }
+            }
+            console.log("testing cache for " + e.name);
+            if (this.GetFromCache(e) == null) {
+                console.log("OBJECT NOT FOUND IN CACHE -- ADDING");
+                this.KnownPokemon.push(e);
+                console.log("CACHE NOW CONTAINS:" + this.KnownPokemon.length + " objects.");
+                //alert(JSON.stringify(JSON.parse(this.KnownPokemon)));
+                localStorage.setItem("KnownPokemon", JSON.stringify(this.KnownPokemon));
+            }
+            else {
+                console.log("...");
+            }
+        }
+
+    });
+
+
+
+
     window.GAMECONTROLLER = kendo.observable({
         pokeSearchURL: "http://pokeapi.co/api/v1/",
         pokemonGen1Count: 151,
@@ -13,7 +73,16 @@
         lookupPokemon: function (e, callback) {
             var request1 = new XMLHttpRequest(); //pokemon lookup...
             var xmlhttp2 = new XMLHttpRequest(); //image lookup...
-
+            var cachedObject = CACHECONTROLLER.GetFromCacheByID(e);
+            if (cachedObject)
+            {
+                GAMECONTROLLER.set("currentPokemon", cachedObject);
+                var v = GAMECONTROLLER.GeneratePickList();
+                //.log("FOUND IN CACHE : " + JSON.stringify(cachedObject));
+                GAMECONTROLLER.set("currentPokemonSprite", cachedObject.SPRITEINFO);
+                GAMECONTROLLER.set("currentPokemonImageURL", "http://pokeapi.co/" + cachedObject.SPRITEINFO.image);
+                callback(true);
+            }
             //handler for pokemon return
             request1.onreadystatechange = function () {
                 if (request1.readyState == 4 && request1.status == 200) {
@@ -32,8 +101,11 @@
                     //alert(JSON.stringify(myPokemonSprite));
                     GAMECONTROLLER.set("currentPokemonSprite", myPokemonSprite);
                     GAMECONTROLLER.set("currentPokemonImageURL", "http://pokeapi.co/" + myPokemonSprite.image)
+                    GAMECONTROLLER.currentPokemon.SPRITEINFO = myPokemonSprite;
+                    CACHECONTROLLER.AddToCache(GAMECONTROLLER.currentPokemon);
                     callback(true);
                 }
+                //{ alert(); }
             }
             request1.open("GET", this.pokeSearchURL + "pokemon/" + e, true);
             request1.send();
@@ -59,11 +131,11 @@
             console.log(this.currentPokemon.name);
           	if (e.toLowerCase() == this.currentPokemon.name.toLowerCase())  
             { 
-                console.log("they match.");
+                //console.log("they match.");
                 return true;
             }
 
-            console.log("they do not match.");
+            //console.log("they do not match.");
             return false;
         },
         currentPokemonChoices: [],
@@ -90,11 +162,18 @@
             var index = Math.floor((Math.random() * this.pokemonGen1Count) + 1);
             this.lookupPokemon(index, callback);
         },
+        getSpecificPokemon: function(index, callback)
+        {
+            this.lookupPokemon(index, callback);
+        },
         getRandomPokemonName: function () {
             var index = Math.floor((Math.random() * this.pokemonGen1Count) + 1);
             return this.pokemonGen1Name.split(",")[index];
         }
     });
+
+
+
     window.APP = kendo.observable({
         models: {
             home: {
@@ -118,7 +197,7 @@
                 onPokemonFound: function (e) {
                     if (e) {
 						if (!this.GameStarted)
-                        {
+						{
                         	window.APP.set("models.home.GameStarted", true); 
                         	window.APP.set("models.home.GameNotStarted", false);        
                             window.APP.set("models.home.buttonText", "Next");
@@ -135,6 +214,10 @@
                     };
                 },
                 listener: function (e) {
+                    //for(i = 0; i<151; i++)
+                    //{
+                    //    GAMECONTROLLER.getSpecificPokemon(i, this.onPokemonFound);
+                    //}
                     var selectedPokemon = e.target.innerHTML;
                     console.log("user clicked on: " + selectedPokemon);
                     //if game is ongoing, check if it's the correct answer.
@@ -203,7 +286,13 @@
             // the application needs to know which view to load first
             initial: 'views/home.html'
         });
-
+        //--enable to clear cache --        localStorage.setItem("KnownPokemon", null);
+        $(window).on("offline", function () {
+            alert("offline");
+        });
+        $(window).on("online", function () {
+            alert("online");
+        });
     }, false);
 
 
